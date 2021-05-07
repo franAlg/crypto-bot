@@ -1,0 +1,10 @@
+# This file contains values from Cookiecutter
+
+default_context:
+  project_name: "crypto-bot"
+  project_description: "Crypto Bot"
+  organization: "crypto-bot"
+  license: "MIT"
+  version: "0.1.0"
+  github_name: "crypto_bot"
+  email: "hello@crypto-bot.com"

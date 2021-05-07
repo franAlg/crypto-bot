@@ -1,0 +1,67 @@
+# Poetry pyproject.toml: https://python-poetry.org/docs/pyproject/
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "crypto-bot"
+version = "0.1.0"
+description = "Crypto Bot"
+readme = "README.md"
+authors = [
+  "Fran Algaba <f.algaba.work@gmail.com>"
+]
+license = "MIT"
+repository = "https://github.com/franalg/crypto-bot"
+homepage = "https://github.com/franalg/crypto-bot"
+
+# Keywords description https://python-poetry.org/docs/pyproject/#keywords
+keywords = []  # Update me
+
+# Pypi classifiers: https://pypi.org/classifiers/
+classifiers = [  # Update me
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.poetry.scripts]
+# Entry points for the package https://python-poetry.org/docs/pyproject/#scripts
+"crypto-bot" = "crypto_bot.main:main"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+boto3 = "^1.17.68"
+pandas = "^1.2.4"
+
+[tool.poetry.dev-dependencies]
+darglint = "^1.5.8"
+isort = "^5.7.0"
+pyupgrade = "^2.7.4"
+black = "^20.8b1"
+mypy = "^0.790"
+bandit = "^1.7.0"
+safety = "^1.10.3"
+pytest = "^6.2.1"
+pylint = "^2.6.0"
+pydocstyle = "^5.1.1"
+pre-commit = "^2.9.3"
+
+[tool.black]
+# https://github.com/psf/black
+line-length = 80
+target-version = ["py38"]
+
+[tool.isort]
+# https://github.com/timothycrosley/isort/
+known_typing = "typing,types,typing_extensions,mypy,mypy_extensions"
+sections = "FUTURE,TYPING,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+include_trailing_comma = true
+default_section = "FIRSTPARTY"
+multi_line_output = 3
+indent = 4
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 80
