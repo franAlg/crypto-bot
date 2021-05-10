@@ -39,7 +39,7 @@ def get_current_balance() -> int:
         current_balance = line
 
     if current_balance is not None:
-        current_balance = int(current_balance)
+        current_balance = float(current_balance)
 
     else:
         current_balance = INITIAL_BALANCE
@@ -54,7 +54,7 @@ def get_open_positions():
 
     positions = []
     for line in obj["Body"].iter_lines():
-        positions.append(line.decode("utf-8"))
+        positions.append(json.loads(line.decode("utf-8")))
 
     return positions
 
@@ -64,10 +64,9 @@ def update_balance(balance):
     S3.put_object(BUCKET_NAME, BALANCE_PATH, balance)
 
 
-def register_transaction(token, order, price, amount, timestamp):
-    audit = [token, order, price, amount, timestamp]
-    print(f"Registering transaction: {audit}")
-    S3.append_to_object(BUCKET_NAME, TX_HISTORY_PATH, audit)
+def register_transaction(audit):
+    print(f"Registering transaction: {json.dumps(audit)}")
+    S3.append_to_object(BUCKET_NAME, TX_HISTORY_PATH, json.dumps(audit))
 
 
 def open_position(token, amount):
@@ -81,11 +80,28 @@ def open_position(token, amount):
     price = float(data["priceUsd"])
     limit = 0.05 * price + price
     stop = price - 0.02 * price
+    amount = amount / price
     timestamp = round(datetime.datetime.now().timestamp() * 1000)
-    transaction = [token, price, limit, stop, amount, timestamp]
+    transaction = {
+        "token": token,
+        "price": price,
+        "limit": limit,
+        "stop": stop,
+        "amount": amount,
+        "timestamp": timestamp,
+    }
     print(f"Opening position: {transaction}")
-    S3.append_to_object(BUCKET_NAME, OPEN_POSITIONS_PATH, transaction)
-    register_transaction(token, "buy", price, amount, timestamp)
+    S3.append_to_object(
+        BUCKET_NAME, OPEN_POSITIONS_PATH, json.dumps(transaction)
+    )
+    audit = {
+        "token": token,
+        "order": "buy",
+        "price": price,
+        "amount": amount,
+        "timestamp": timestamp,
+    }
+    register_transaction(audit)
 
 
 def evaluate_positions(positions, current_balance):
@@ -104,9 +120,53 @@ def evaluate_positions(positions, current_balance):
     if n_positions == 1:
         print("Opening 1 positions...")
         for position in price_change_rank:
-            if position not in "".join(positions):
+            if position not in " ".join([item["token"] for item in positions]):
                 open_position(position, current_balance)
                 break
         update_balance(0)
     if n_positions == 2:
         print("Waiting till next execution...")
+
+
+def evaluate_sell_positions(positions, current_balance):
+
+    updated = False
+    for index, position in enumerate(positions):
+        # Get token info
+        response = requests.request(
+            "GET",
+            f"http://api.coincap.io/v2/assets/{position['token']}",
+            headers={},
+            data={},
+        )
+        text = response.text
+        data = json.loads(text)
+        data = data["data"]
+        price = float(data["priceUsd"])
+        if price > position["limit"]:
+            updated = True
+            position["priceUsd"] = price
+            position["stop"] = position["limit"] - 0.02 * position["limit"]
+            position["limit"] = 0.05 * price + price
+            position["timestaregister_transactionmp"] = round(
+                datetime.datetime.now().timestamp() * 1000
+            )
+            print(f"Updated open position: {json.dumps(position)}")
+            register_transaction(position)
+        elif price < position["stop"]:
+            audit = {
+                "token": position["token"],
+                "order": "sell",
+                "price": position["stop"],
+                "amount": position["amount"],
+                "timestamp": round(datetime.datetime.now().timestamp() * 1000),
+            }
+            profit = position["stop"] * position["amount"]
+            register_transaction(audit)
+            update_balance(current_balance + profit)
+            del positions[index]
+        else:
+            print(f"No changes in position: {position['token']}")
+
+    if updated:
+        S3.put_object(BUCKET_NAME, OPEN_POSITIONS_PATH, positions)

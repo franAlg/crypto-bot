@@ -26,8 +26,6 @@ def main():
 
     args = parser.parse_args()
 
-    positions = get_open_positions()
-
     if args.reset:
         print("Reset...")
         reset_balance()
@@ -35,6 +33,6 @@ def main():
         reset_positions()
         current_balance = INITIAL_BALANCE
     else:
+        positions = get_open_positions()
         current_balance = get_current_balance()
-
-    evaluate_positions(positions, current_balance)
+        evaluate_positions(positions, current_balance)
