@@ -77,15 +77,18 @@ class BinanceConnector:
 
         symbol = self._get_token_symbol(token)
         symbol = f"{symbol}USDT"
+
         step_size = self._get_lot_size(symbol)
         precision = int(round(-math.log(step_size, 10), 0))
-
+        quantity = round(quantity, precision)
+        if SIDE_SELL:
+            quantity = quantity - step_size
         if type == ORDER_TYPE_MARKET:
             order = self._client.create_order(
                 symbol=symbol,
                 side=side,
                 type=type,
-                quantity=round(quantity, precision),
+                quantity=quantity,
             )
             logger.info(f"Binance order: {order}")
 
