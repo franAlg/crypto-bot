@@ -5,6 +5,7 @@ import math
 
 from binance.client import Client
 from binance.enums import *
+from loguru import logger
 
 
 class BinanceConnector:
@@ -19,7 +20,7 @@ class BinanceConnector:
         return cls._instance
 
     def __init__(self) -> None:
-        print("Creating Binance client...")
+        logger.info("Creating Binance client...")
 
         api_key = os.getenv("BINANCE_API_KEY")
         if api_key is None:
@@ -52,20 +53,22 @@ class BinanceConnector:
         )
         text = response.text
         data = json.loads(text)
-        print(data.keys())
+        logger.info(data.keys())
         data = data["symbols"]
         for token in data:
             if token["symbol"] == symbol:
                 for filter in token["filters"]:
                     if filter["filterType"] == "LOT_SIZE":
-                        print(f"StepSize for {symbol} is: {filter['stepSize']}")
+                        logger.info(
+                            f"StepSize for {symbol} is: {filter['stepSize']}"
+                        )
                         return float(filter["stepSize"])
 
     def get_token_balance(self, token: str):
 
         symbol = self._get_token_symbol(token)
         response = self._client.get_asset_balance(asset=symbol)
-        print(f"Current {token} balance: {response['free']}")
+        logger.info(f"Current {token} balance: {response['free']}")
         return response["free"]
 
     def create_order(self, token: str, side: str, type: str, quantity: float):
@@ -84,7 +87,7 @@ class BinanceConnector:
                 type=type,
                 quantity=round(quantity, precision),
             )
-            print(f"Binance order: {order}")
+            logger.info(f"Binance order: {order}")
 
 
 binance = BinanceConnector()

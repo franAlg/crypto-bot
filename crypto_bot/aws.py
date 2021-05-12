@@ -1,4 +1,5 @@
 import boto3
+from loguru import logger
 
 
 class S3Connector:
@@ -14,7 +15,7 @@ class S3Connector:
         return cls._instance
 
     def __init__(self) -> None:
-        print("Creating S3 resource...")
+        logger.info("Creating S3 resource...")
         self._s3_resource = boto3.resource(service_name="s3")
         self._s3_client = boto3.client(service_name="s3")
 

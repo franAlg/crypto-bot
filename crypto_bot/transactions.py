@@ -3,6 +3,7 @@ import datetime
 
 import requests
 from binance.enums import *
+from loguru import logger
 
 from crypto_bot.crypto import get_price_changes, get_top_crypto
 from crypto_bot.aws import S3
@@ -34,13 +35,13 @@ def reset_transactions():
 def get_current_balance() -> int:
 
     current_balance = binance.get_token_balance("tether")
-    print(f"Current balance is: {current_balance}")
+    logger.info(f"Current balance is: {current_balance}")
 
     return float(current_balance)
 
 
 def get_open_positions():
-    print("Getting positions...")
+    logger.info("Getting positions...")
     obj = S3.get_object(BUCKET_NAME, OPEN_POSITIONS_PATH)
 
     positions = []
@@ -51,12 +52,12 @@ def get_open_positions():
 
 
 def update_balance(balance):
-    print(f"Updating balance to: {balance}")
+    logger.info(f"Updating balance to: {balance}")
     S3.put_object(BUCKET_NAME, BALANCE_PATH, balance)
 
 
 def register_transaction(audit):
-    print(f"Registering transaction: {json.dumps(audit)}")
+    logger.info(f"Registering transaction: {json.dumps(audit)}")
     S3.append_to_object(BUCKET_NAME, TX_HISTORY_PATH, json.dumps(audit))
 
 
@@ -81,7 +82,7 @@ def open_position(token, amount):
         "amount": amount,
         "timestamp": timestamp,
     }
-    print(f"Opening position: {transaction}")
+    logger.info(f"Opening position: {transaction}")
     binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
 
     S3.append_to_object(
@@ -99,7 +100,7 @@ def open_position(token, amount):
 
 
 def evaluate_positions(positions, current_balance):
-    print("Evaluating positions...")
+    logger.info("Evaluating positions...")
 
     df = get_top_crypto(rank=20, market_cap_limit=1000000000)
     price_change_rank = get_price_changes(df, timeframe=12)
@@ -107,19 +108,19 @@ def evaluate_positions(positions, current_balance):
     n_positions = len(positions)
 
     if n_positions == 0:
-        print("Opening 2 positions...")
+        logger.info("Opening 2 positions...")
         open_position(price_change_rank[0], current_balance / 2)
         open_position(price_change_rank[1], current_balance / 2)
         update_balance(0)
     if n_positions == 1:
-        print("Opening 1 positions...")
+        logger.info("Opening 1 positions...")
         for position in price_change_rank:
             if position not in " ".join([item["token"] for item in positions]):
                 open_position(position, current_balance)
                 break
         update_balance(0)
     if n_positions == 2:
-        print("Waiting till next execution...")
+        logger.info("Waiting till next execution...")
 
 
 def evaluate_sell_positions(positions, current_balance):
@@ -145,7 +146,7 @@ def evaluate_sell_positions(positions, current_balance):
             position["timestamp"] = round(
                 datetime.datetime.now().timestamp() * 1000
             )
-            print(f"Updated open position: {json.dumps(position)}")
+            logger.info(f"Updated open position: {json.dumps(position)}")
             register_transaction(position)
         elif price < position["stop"]:
 
@@ -168,7 +169,7 @@ def evaluate_sell_positions(positions, current_balance):
             update_balance(current_balance + profit)
             del positions[index]
         else:
-            print(f"No changes in position: {position['token']}")
+            logger.info(f"No changes in position: {position['token']}")
 
     if updated:
         S3.put_object(BUCKET_NAME, OPEN_POSITIONS_PATH, positions)

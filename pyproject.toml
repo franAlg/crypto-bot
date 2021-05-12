@@ -37,6 +37,7 @@ python = "^3.8"
 boto3 = "^1.17.68"
 pandas = "^1.2.4"
 python-binance = "^1.0.8"
+loguru = "^0.5.3"
 
 [tool.poetry.dev-dependencies]
 darglint = "^1.5.8"

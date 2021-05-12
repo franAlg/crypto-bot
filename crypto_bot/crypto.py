@@ -51,7 +51,6 @@ def get_price_changes(df, timeframe: int = 12, sort: bool = True):
         first_datapoint = df_data_value.iloc[0]["priceUsd"]
         last_datapoint = df_data_value.iloc[-1]["priceUsd"]
         increase = last_datapoint - first_datapoint
-        # print(f"First datapoint: {first_datapoint} Last datapoint: {last_datapoint} Increase: {increase}")
         value_change = (increase / abs(first_datapoint)) * 100
         if value_change > 0:
             price_change[token] = value_change

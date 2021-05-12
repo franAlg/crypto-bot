@@ -1,6 +1,8 @@
 import os
 import argparse
 
+from loguru import logger
+
 from crypto_bot.transactions import (
     get_open_positions,
     get_current_balance,
@@ -27,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     if args.reset:
-        print("Reset...")
+        logger.info("Reset...")
         reset_balance()
         reset_transactions()
         reset_positions()
