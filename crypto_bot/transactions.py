@@ -2,12 +2,13 @@ import json
 import datetime
 
 import requests
+from binance.enums import *
 
 from crypto_bot.crypto import get_price_changes, get_top_crypto
 from crypto_bot.aws import S3
+from crypto_bot.binance import binance
 
-# Lista negra de Tokens con los que no operar. Descartaremos los stablecoin.
-TOKEN_BLACKLIST = ["usd", "tether", "dai"]
+
 INITIAL_BALANCE = 500
 
 BUCKET_NAME = "cryptobotmetadata"
@@ -32,20 +33,10 @@ def reset_transactions():
 
 def get_current_balance() -> int:
 
-    current_balance = None
-    obj = S3.get_object(BUCKET_NAME, BALANCE_PATH)
-
-    for line in obj["Body"].iter_lines():
-        current_balance = line
-
-    if current_balance is not None:
-        current_balance = float(current_balance)
-
-    else:
-        current_balance = INITIAL_BALANCE
+    current_balance = binance.get_token_balance("tether")
     print(f"Current balance is: {current_balance}")
 
-    return current_balance
+    return float(current_balance)
 
 
 def get_open_positions():
@@ -91,6 +82,8 @@ def open_position(token, amount):
         "timestamp": timestamp,
     }
     print(f"Opening position: {transaction}")
+    binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
+
     S3.append_to_object(
         BUCKET_NAME, OPEN_POSITIONS_PATH, json.dumps(transaction)
     )
@@ -101,6 +94,7 @@ def open_position(token, amount):
         "amount": amount,
         "timestamp": timestamp,
     }
+
     register_transaction(audit)
 
 
@@ -145,15 +139,23 @@ def evaluate_sell_positions(positions, current_balance):
         price = float(data["priceUsd"])
         if price > position["limit"]:
             updated = True
-            position["priceUsd"] = price
+            position["price"] = price
             position["stop"] = position["limit"] - 0.02 * position["limit"]
             position["limit"] = 0.05 * price + price
-            position["timestaregister_transactionmp"] = round(
+            position["timestamp"] = round(
                 datetime.datetime.now().timestamp() * 1000
             )
             print(f"Updated open position: {json.dumps(position)}")
             register_transaction(position)
         elif price < position["stop"]:
+
+            binance.get_token_balance(position["token"])
+            binance.create_order(
+                position["token"],
+                SIDE_SELL,
+                ORDER_TYPE_MARKET,
+                position["amount"],
+            )
             audit = {
                 "token": position["token"],
                 "order": "sell",

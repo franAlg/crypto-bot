@@ -3,6 +3,9 @@ import datetime
 import json
 import pandas as pd
 
+# Lista negra de Tokens con los que no operar. Descartaremos los stablecoin.
+TOKEN_BLACKLIST = ["usd", "tether", "dai", "usd-coin", "binance-usd"]
+
 
 def get_top_crypto(rank: int = 12, market_cap_limit: int = 1500000000):
     response = requests.request(
@@ -10,6 +13,7 @@ def get_top_crypto(rank: int = 12, market_cap_limit: int = 1500000000):
     )
     data = json.loads(response.text)
     df_data = pd.json_normalize(data["data"])
+    df_data = df_data[~df_data["id"].isin(TOKEN_BLACKLIST)]
     df_data["marketCapUsd"] = df_data["marketCapUsd"].astype("float")
     df_data["volumeUsd24Hr"] = df_data["volumeUsd24Hr"].astype("float")
     # Rank assets by biggest volume and upper limit mkcap
@@ -49,7 +53,8 @@ def get_price_changes(df, timeframe: int = 12, sort: bool = True):
         increase = last_datapoint - first_datapoint
         # print(f"First datapoint: {first_datapoint} Last datapoint: {last_datapoint} Increase: {increase}")
         value_change = (increase / abs(first_datapoint)) * 100
-        price_change[token] = value_change
+        if value_change > 0:
+            price_change[token] = value_change
     if sort:
         price_change = {
             k: v
