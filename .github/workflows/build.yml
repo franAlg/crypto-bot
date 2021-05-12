@@ -7,8 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.8"]
+        python-version: ["3.8"]
     steps:
+    - uses: actions/checkout@v2
     - run: docker build --tag crypto-bot .
     - name: Push to ECR
       id: ecr
