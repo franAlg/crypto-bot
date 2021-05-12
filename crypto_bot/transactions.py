@@ -110,9 +110,15 @@ def evaluate_positions(positions, current_balance):
     if n_positions == 0:
         logger.info("Opening 2 positions...")
         open_position(price_change_rank[0], current_balance / 2)
-        current_balance = get_current_balance()
-        open_position(price_change_rank[1], current_balance)
-        update_balance(0)
+        if len(price_change_rank) > 1:
+            current_balance = get_current_balance()
+            open_position(price_change_rank[1], current_balance)
+            update_balance(0)
+        else:
+            logger.info(
+                "List rank only has one token... skipping one open order until next execution"
+            )
+            update_balance(get_current_balance())
     if n_positions == 1:
         logger.info("Opening 1 positions...")
         for position in price_change_rank:
