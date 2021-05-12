@@ -2,6 +2,7 @@ import requests
 import datetime
 import json
 import pandas as pd
+from loguru import logger
 
 # Lista negra de Tokens con los que no operar. Descartaremos los stablecoin.
 TOKEN_BLACKLIST = ["usd", "tether", "dai", "usd-coin", "binance-usd"]
@@ -61,4 +62,24 @@ def get_price_changes(df, timeframe: int = 12, sort: bool = True):
                 price_change.items(), key=lambda item: item[1], reverse=True
             )
         }
-    return list(price_change.keys())
+
+    # Check if tokens are in binance
+    top_tokens = list(price_change.keys())
+    for token in top_tokens:
+        response = requests.request(
+            "GET",
+            f"http://api.coincap.io/v2/assets/{token}/markets",
+            headers={},
+            data={"offset": 0},
+        )
+        text = response.text
+        data = json.loads(text)
+        markets = data["data"]
+        is_binance = False
+        for exchange in markets:
+            if exchange["exchangeId"] == "Binance":
+                is_binance = True
+                break
+        if not is_binance:
+            top_tokens.remove(token)
+    return top_tokens
