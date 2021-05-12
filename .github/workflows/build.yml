@@ -9,7 +9,7 @@ jobs:
       matrix:
         python-version: ["3.8", "3.8"]
     steps:
-    - run: docker build --tag crypto-bot -f docker/Dockerfile .
+    - run: docker build --tag crypto-bot .
     - name: Push to ECR
       id: ecr
       uses: jwalton/gh-ecr-push@v1
