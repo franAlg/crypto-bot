@@ -107,27 +107,30 @@ def evaluate_positions(positions, current_balance):
 
     n_positions = len(positions)
 
-    if n_positions == 0:
-        logger.info("Opening 2 positions...")
-        open_position(price_change_rank[0], current_balance / 2)
-        if len(price_change_rank) > 1:
-            current_balance = get_current_balance()
-            open_position(price_change_rank[1], current_balance)
+    if len(price_change_rank) > 0:
+        if n_positions == 0:
+            logger.info("Opening 2 positions...")
+            open_position(price_change_rank[0], current_balance / 2)
+            if len(price_change_rank) > 1:
+                current_balance = get_current_balance()
+                open_position(price_change_rank[1], current_balance)
+                update_balance(0)
+            else:
+                logger.info(
+                    "List rank only has one token... skipping one open order until next execution"
+                )
+                update_balance(get_current_balance())
+        if n_positions == 1:
+            logger.info("Opening 1 positions...")
+            for position in price_change_rank:
+                if position not in " ".join([item["token"] for item in positions]):
+                    open_position(position, current_balance)
+                    break
             update_balance(0)
-        else:
-            logger.info(
-                "List rank only has one token... skipping one open order until next execution"
-            )
-            update_balance(get_current_balance())
-    if n_positions == 1:
-        logger.info("Opening 1 positions...")
-        for position in price_change_rank:
-            if position not in " ".join([item["token"] for item in positions]):
-                open_position(position, current_balance)
-                break
-        update_balance(0)
-    if n_positions == 2:
-        logger.info("Waiting till next execution...")
+        if n_positions == 2:
+            logger.info("Waiting till next execution...")
+    else:
+        logger.info("No positions to open... waiting till next execution")
 
 
 def evaluate_sell_positions(positions, current_balance):
