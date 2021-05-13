@@ -166,7 +166,7 @@ def evaluate_sell_positions(positions, current_balance):
             logger.info(f"Updated open position: {json.dumps(position)}")
             register_transaction(position)
         elif price < position["stop"]:
-
+            updated = True
             binance.get_token_balance(position["token"])
             binance.create_order(
                 position["token"],
