@@ -93,6 +93,7 @@ class BinanceConnector:
                 quantity=quantity,
             )
             logger.info(f"Binance order: {order}")
+        return order
 
 
 binance = BinanceConnector()

@@ -84,7 +84,9 @@ def open_position(token, amount):
         "timestamp": timestamp,
     }
     logger.info(f"Opening position: {transaction}")
-    binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
+    order = binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
+
+    transaction["amount"] = order["executedQty"]
 
     S3.append_to_object(
         BUCKET_NAME, OPEN_POSITIONS_PATH, json.dumps(transaction)
@@ -93,7 +95,7 @@ def open_position(token, amount):
         "token": token,
         "order": "buy",
         "price": price,
-        "amount": amount,
+        "amount": order["executedQty"],
         "timestamp": timestamp,
     }
 
