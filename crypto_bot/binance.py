@@ -79,9 +79,12 @@ class BinanceConnector:
 
         step_size = self._get_lot_size(symbol)
         precision = int(round(-math.log(step_size, 10), 0))
-        quantity = round(quantity, precision)
-        if SIDE_SELL:
-            quantity = quantity - step_size
+
+        multiplier = 10 ** precision
+        quantity = quantity - step_size
+        quantity = int(quantity * multiplier) / multiplier
+        logger.info(f"Order amount: {quantity}")
+
         if type == ORDER_TYPE_MARKET:
             order = self._client.create_order(
                 symbol=symbol,
