@@ -53,7 +53,6 @@ class BinanceConnector:
         )
         text = response.text
         data = json.loads(text)
-        logger.info(data.keys())
         data = data["symbols"]
         for token in data:
             if token["symbol"] == symbol:

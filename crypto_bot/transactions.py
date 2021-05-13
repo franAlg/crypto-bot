@@ -123,7 +123,9 @@ def evaluate_positions(positions, current_balance):
         if n_positions == 1:
             logger.info("Opening 1 positions...")
             for position in price_change_rank:
-                if position not in " ".join([item["token"] for item in positions]):
+                if position not in " ".join(
+                    [item["token"] for item in positions]
+                ):
                     open_position(position, current_balance)
                     break
             update_balance(0)
@@ -182,4 +184,5 @@ def evaluate_sell_positions(positions, current_balance):
             logger.info(f"No changes in position: {position['token']}")
 
     if updated:
-        S3.put_object(BUCKET_NAME, OPEN_POSITIONS_PATH, positions)
+        positions = [json.dumps(item) for item in positions]
+        S3.put_object(BUCKET_NAME, OPEN_POSITIONS_PATH, "\n".join(positions))
