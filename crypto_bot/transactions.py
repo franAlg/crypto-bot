@@ -1,3 +1,4 @@
+import os
 import json
 import datetime
 
@@ -102,8 +103,12 @@ def open_position(token, amount):
 def evaluate_positions(positions, current_balance):
     logger.info("Evaluating positions...")
 
-    df = get_top_crypto(rank=20, market_cap_limit=1000000000)
-    price_change_rank = get_price_changes(df, timeframe=12)
+    rank = int(os.getenv("CRYPTO_RANK", "20"))
+    market_cap_limit = int(os.getenv("CRYPTO_MARKET_CAP_LIMIT", "1000000000"))
+    timeframe = int(os.getenv("CRYPTO_TIMEFRAME", "12"))
+
+    df = get_top_crypto(rank=rank, market_cap_limit=market_cap_limit)
+    price_change_rank = get_price_changes(df, timeframe=timeframe)
 
     n_positions = len(positions)
 
