@@ -86,7 +86,7 @@ def open_position(token, amount):
     logger.info(f"Opening position: {transaction}")
     order = binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
 
-    transaction["amount"] = order["executedQty"]
+    transaction["amount"] = float(order["executedQty"])
 
     S3.append_to_object(
         BUCKET_NAME, OPEN_POSITIONS_PATH, json.dumps(transaction)
@@ -95,7 +95,7 @@ def open_position(token, amount):
         "token": token,
         "order": "buy",
         "price": price,
-        "amount": order["executedQty"],
+        "amount": float(order["executedQty"]),
         "timestamp": timestamp,
     }
 
@@ -164,7 +164,6 @@ def evaluate_sell_positions(positions, current_balance):
                 datetime.datetime.now().timestamp() * 1000
             )
             logger.info(f"Updated open position: {json.dumps(position)}")
-            register_transaction(position)
         elif price < position["stop"]:
             updated = True
             binance.get_token_balance(position["token"])
