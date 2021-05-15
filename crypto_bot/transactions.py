@@ -38,7 +38,7 @@ def get_current_balance() -> int:
     current_balance = binance.get_token_balance("tether")
     logger.info(f"Current balance is: {current_balance}")
 
-    return float(current_balance)
+    return current_balance
 
 
 def get_open_positions():
@@ -84,9 +84,11 @@ def open_position(token, amount):
         "timestamp": timestamp,
     }
     logger.info(f"Opening position: {transaction}")
-    order = binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
 
-    transaction["amount"] = float(order["executedQty"])
+    current_token_amount = binance.get_token_balance(token)
+    binance.create_order(token, SIDE_BUY, ORDER_TYPE_MARKET, amount)
+    amount = binance.get_token_balance(token) - current_token_amount
+    transaction["amount"] = amount
 
     S3.append_to_object(
         BUCKET_NAME, OPEN_POSITIONS_PATH, json.dumps(transaction)
@@ -95,7 +97,7 @@ def open_position(token, amount):
         "token": token,
         "order": "buy",
         "price": price,
-        "amount": float(order["executedQty"]),
+        "amount": amount,
         "timestamp": timestamp,
     }
 

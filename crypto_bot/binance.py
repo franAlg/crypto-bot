@@ -68,7 +68,7 @@ class BinanceConnector:
         symbol = self._get_token_symbol(token)
         response = self._client.get_asset_balance(asset=symbol)
         logger.info(f"Current {token} balance: {response['free']}")
-        return response["free"]
+        return float(response["free"])
 
     def create_order(self, token: str, side: str, type: str, quantity: float):
 
@@ -77,12 +77,14 @@ class BinanceConnector:
         symbol = self._get_token_symbol(token)
         symbol = f"{symbol}USDT"
 
+        fees = float(
+            binance._client.get_trade_fee(symbol=symbol)[0]["makerCommission"]
+        )
         step_size = self._get_lot_size(symbol)
         precision = int(round(-math.log(step_size, 10), 0))
 
-        multiplier = 10 ** precision
-        quantity = quantity - step_size
-        quantity = int(quantity * multiplier) / multiplier
+        quantity = quantity - step_size - fees
+        quantity = float(f"{quantity:.{precision}f}")
         logger.info(f"Order amount: {quantity}")
 
         if type == ORDER_TYPE_MARKET:
