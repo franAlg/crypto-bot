@@ -9,7 +9,7 @@ jobs:
       matrix:
         python-version: ["3.8"]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: docker build --tag crypto-bot:${GITHUB_SHA::8} .
     - name: Push to ECR
       id: ecr
